@@ -1,0 +1,4 @@
+[
+        { "do": { "android_add_permission": "android.permission.READ_CALENDAR" } },
+        { "do": { "android_add_permission": "android.permission.WRITE_CALENDAR" } }
+]
