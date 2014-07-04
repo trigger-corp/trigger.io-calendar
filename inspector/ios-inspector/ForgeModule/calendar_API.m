@@ -179,6 +179,27 @@ typedef void (^EventAccessBlock_t)(BOOL granted, NSError *error);
     }
 }
 
++ (BOOL)doDelete:(ForgeTask *)task eventStore:(EKEventStore *)eventStore eventID:(NSString *)eventID {
+    EKEvent *event = [eventStore eventWithIdentifier:eventID];
+    
+    if (!event) {
+        [task error:@"Event does not exist" type:@"EXPECTED_FAILURE" subtype:nil];
+        return NO;
+    }
+    
+    NSError *error = nil;
+    
+    [eventStore removeEvent:event span:EKSpanFutureEvents error:&error];
+    
+    if (error) {
+        [task error:@"Failed to remove event" type:@"UNEXPECTED_FAILURE" subtype:nil];
+        return NO;
+    }
+    else {
+        return YES;
+    }
+}
+
 + (BOOL)doCommit:(ForgeTask *)task eventStore:(EKEventStore *)eventStore {
     NSError *error = nil;
 
@@ -364,20 +385,13 @@ typedef void (^EventAccessBlock_t)(BOOL granted, NSError *error);
 			return;
 		}
 		
-		EKEvent *event = [eventStore eventWithIdentifier:eventId];
-		
-		if (!event) {
-			[task error:@"Event does not exist" type:@"EXPECTED_FAILURE" subtype:nil];
-			return;
-		}
-		
-		NSError *error = nil;
-		[eventStore removeEvent:event span:EKSpanFutureEvents error:&error];
-		if (error) {
-			[task error:@"Failed to remove event" type:@"UNEXPECTED_FAILURE" subtype:nil];
-		} else {
+        if ([self doDelete:task eventStore:eventStore eventID:eventId]) {
+            if ([self doCommit:task eventStore:eventStore]) {
                 [task success:nil];
             }
+        }
+
+        // If something went wrong, the error is already reported.
 	};
 	
 	if ([eventStore respondsToSelector:@selector(requestAccessToEntityType:completion:)]) {
