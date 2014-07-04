@@ -241,6 +241,51 @@ typedef void (^EventAccessBlock_t)(BOOL granted, NSError *error);
 	}
 }
 
++ (void)insertManyEvents:(ForgeTask*)task eventDetails:(NSArray *)eventDetails {
+	EKEventStore *eventStore = [[EKEventStore alloc] init];
+	
+	EventAccessBlock_t eventAccess = ^(BOOL granted, NSError *err) {
+		if (!granted) {
+			[task error:@"User denied calendar access" type:@"EXPECTED_FAILURE" subtype:nil];
+			return;
+		}
+		
+        NSMutableArray *results = [NSMutableArray arrayWithCapacity:[eventDetails count]];
+        BOOL anyFailures = NO;
+        
+        for (NSDictionary *details in eventDetails) {
+            NSString *eventID = [self doInsert:task eventStore:eventStore details:details];
+            
+            if (eventID) {
+                [results addObject:eventID];
+            }
+            else {
+                anyFailures = YES;
+                
+                for (NSString *eventID in results) {
+                    (void)[self doDelete:task eventStore:eventStore eventID:eventID];
+                }
+                
+                break;
+            }
+        }
+        
+        if (!anyFailures) {
+            if ([self doCommit:task eventStore:eventStore]) {
+                [task success:results];
+            }
+        }
+        
+        // As usual, if anything's gone wrong, the error is already reported.
+    };
+	
+	if ([eventStore respondsToSelector:@selector(requestAccessToEntityType:completion:)]) {
+		[eventStore requestAccessToEntityType:EKEntityTypeEvent completion:eventAccess];
+	} else {
+		eventAccess(YES, nil);
+	}
+}
+
 + (void)updateEvent:(ForgeTask*)task eventId:(NSString*)eventId details:(NSDictionary*)details {
 	EKEventStore *eventStore = [[EKEventStore alloc] init];
 	
