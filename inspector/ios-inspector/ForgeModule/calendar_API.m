@@ -254,6 +254,7 @@ typedef void (^EventAccessBlock_t)(BOOL granted, NSError *error);
         BOOL anyFailures = NO;
         
         for (NSDictionary *details in eventDetails) {
+        	usleep(300);
             NSString *eventID = [self doInsert:task eventStore:eventStore details:details];
             
             if (eventID) {
