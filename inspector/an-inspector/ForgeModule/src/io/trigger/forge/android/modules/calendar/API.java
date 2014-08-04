@@ -1,5 +1,6 @@
 package io.trigger.forge.android.modules.calendar;
 
+import java.text.ParseException;
 import java.util.Calendar;
 import java.util.Date;
 import java.util.GregorianCalendar;
@@ -20,7 +21,6 @@ import android.os.Build;
 import android.provider.CalendarContract;
 import android.provider.CalendarContract.Calendars;
 import android.provider.CalendarContract.Events;
-
 import com.google.gson.JsonArray;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonPrimitive;
@@ -195,54 +195,73 @@ public class API {
 	
 	public static void getEvent(final ForgeTask task, @ForgeParam("eventId") final int eventId) {
 		Uri eventUri;
-		String[] projection = new String[] { Events.TITLE, Events.DESCRIPTION, Events.EVENT_LOCATION, Events.DTSTART, Events.DTEND, Events.ALL_DAY, Events.RRULE, Events._ID, Events.CALENDAR_ID };
+		String selection;
+		String[] projection = new String[] { Events.TITLE, Events.DESCRIPTION, Events.EVENT_LOCATION, Events.DTSTART, Events.DTEND, Events.ALL_DAY, Events.RRULE, Events._ID, Events.CALENDAR_ID, Events.DURATION };
 		if (Build.VERSION.SDK_INT >= 8) {
-    		eventUri = Uri.parse("content://com.android.calendar/events");
-    	} else {
-    		eventUri = Uri.parse("content://calendar/events");
-    	}
-    	Cursor cursor = ForgeApp.getActivity().getContentResolver().query(eventUri, projection, "_id = ?", new String[] { String.valueOf(eventId) }, null);
-    	if (cursor.moveToFirst()) {
-    		JsonObject result = new JsonObject();
-    		result.addProperty("title", cursor.getString(0));
-    		result.addProperty("description", cursor.getString(1));
-    		result.addProperty("location", cursor.getString(2));
-    		result.addProperty("start", (double)cursor.getLong(3) / 1000.0);
-    		result.addProperty("end", (double)cursor.getLong(4) / 1000.0);
-    		result.addProperty("allday", cursor.getInt(5) == 1);
-    		result.addProperty("id", cursor.getInt(7));
-    		result.addProperty("calendar", cursor.getInt(8));
-    		task.success(result);
-    	} else {
-    		task.error("Event does not exist", "EXPECTED_FAILURE", null);
-    		return;
-    	}
+			eventUri = Uri.parse("content://com.android.calendar/events");
+		} else {
+			eventUri = Uri.parse("content://calendar/events");
+		}
+		Cursor cursor = ForgeApp.getActivity().getContentResolver().query(eventUri, projection, "_id = ?", new String[] { String.valueOf(eventId) }, null);
+		if (cursor.moveToFirst()) {
+			JsonObject result = new JsonObject();
+			result.addProperty("title", cursor.getString(0));
+			result.addProperty("description", cursor.getString(1));
+			result.addProperty("location", cursor.getString(2));
+			result.addProperty("start", (double)cursor.getLong(3) / 1000.0);
+			result.addProperty("end", (double)cursor.getLong(4) / 1000.0);
+			result.addProperty("allday", cursor.getInt(5) == 1);
+			result.addProperty("id", cursor.getInt(7));
+			result.addProperty("calendar", cursor.getInt(8));
+			if (cursor.getLong(4) == 0 && cursor.getString(9) != null) {
+				try {
+					Duration d = new Duration();
+					d.parse(cursor.getString(9));
+					result.addProperty("end", (cursor.getLong(3) + d.getMillis()) / 1000.0);
+				} catch (ParseException e) {
+					ForgeLog.e(e.getLocalizedMessage());
+				}
+			}
+			task.success(result);
+		} else {
+			task.error("Event does not exist", "EXPECTED_FAILURE", null);
+			return;
+		}
 	}
 	
 	public static void getEvents(final ForgeTask task, @ForgeParam("from") final double from, @ForgeParam("to") final double to) {
 		Uri.Builder builder = CalendarContract.Instances.CONTENT_URI.buildUpon();
 		ContentUris.appendId(builder, (long)(from * 1000));
 		ContentUris.appendId(builder, (long)(to * 1000));
-		
+
 		Uri eventUri = builder.build();
-		String[] projection = new String[] { Events.TITLE, Events.DESCRIPTION, Events.EVENT_LOCATION, Events.DTSTART, Events.DTEND, Events.ALL_DAY, Events.RRULE, CalendarContract.Instances.EVENT_ID, Events.CALENDAR_ID };
+		String[] projection = new String[] { Events.TITLE, Events.DESCRIPTION, Events.EVENT_LOCATION, Events.DTSTART, Events.DTEND, Events.ALL_DAY, Events.RRULE, CalendarContract.Instances.EVENT_ID, Events.CALENDAR_ID, Events.DURATION };
 
 		Cursor cursor = ForgeApp.getActivity().getContentResolver().query(eventUri, projection, null, null, null);
 
-    	JsonArray events = new JsonArray();
-    	while (cursor.moveToNext()) {
-    		JsonObject result = new JsonObject();
-    		result.addProperty("title", cursor.getString(0));
-    		result.addProperty("description", cursor.getString(1));
-    		result.addProperty("location", cursor.getString(2));
-    		result.addProperty("start", (double)cursor.getLong(3) / 1000.0);
-    		result.addProperty("end", (double)cursor.getLong(4) / 1000.0);
-    		result.addProperty("allday", cursor.getInt(5) == 1);
-    		result.addProperty("id", cursor.getInt(7));
-    		result.addProperty("calendar", cursor.getInt(8));
-    		events.add(result);
-    	}
-   		task.success(events);
+		JsonArray events = new JsonArray();
+		while (cursor.moveToNext()) {
+			JsonObject result = new JsonObject();
+			result.addProperty("title", cursor.getString(0));
+			result.addProperty("description", cursor.getString(1));
+			result.addProperty("location", cursor.getString(2));
+			result.addProperty("start", (double)cursor.getLong(3) / 1000.0);
+			result.addProperty("end", (double)cursor.getLong(4) / 1000.0);
+			result.addProperty("allday", cursor.getInt(5) == 1);
+			result.addProperty("id", cursor.getInt(7));
+			result.addProperty("calendar", cursor.getInt(8));
+			if (cursor.getLong(4) == 0 && cursor.getString(9) != null) {
+				try {
+					Duration d = new Duration();
+					d.parse(cursor.getString(9));
+					result.addProperty("end", (cursor.getLong(3) + d.getMillis()) / 1000.0);
+				} catch (ParseException e) {
+					ForgeLog.e(e.getLocalizedMessage());
+				}
+			}
+			events.add(result);
+		}
+		task.success(events);
 	}
 
 	public static void addEvent(final ForgeTask task, @ForgeParam("details") final JsonObject details) {
