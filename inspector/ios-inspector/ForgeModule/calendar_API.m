@@ -219,19 +219,21 @@ typedef void (^EventAccessBlock_t)(BOOL granted, NSError *error);
 	EKEventStore *eventStore = [[EKEventStore alloc] init];
 	
 	EventAccessBlock_t eventAccess = ^(BOOL granted, NSError *err) {
-		if (!granted) {
-			[task error:@"User denied calendar access" type:@"EXPECTED_FAILURE" subtype:nil];
-			return;
-		}
+		dispatch_async(dispatch_get_main_queue(), ^{
+			if (!granted) {
+				[task error:@"User denied calendar access" type:@"EXPECTED_FAILURE" subtype:nil];
+				return;
+			}
 
-        NSString *eventID = [self doInsert:task eventStore:eventStore details:details];
-        
-        if (eventID) {
-            if ([self doCommit:task eventStore:eventStore]) {
-                [task success:eventID];
-            }
-        }
-        // If no eventID, the error has already been logged.
+	        NSString *eventID = [self doInsert:task eventStore:eventStore details:details];
+	        
+	        if (eventID) {
+	            if ([self doCommit:task eventStore:eventStore]) {
+	                [task success:eventID];
+	            }
+	        }
+	        // If no eventID, the error has already been logged.
+		});
     };
 	
 	if ([eventStore respondsToSelector:@selector(requestAccessToEntityType:completion:)]) {
@@ -380,18 +382,20 @@ typedef void (^EventAccessBlock_t)(BOOL granted, NSError *error);
 	EKEventStore *eventStore = [[EKEventStore alloc] init];
 	
 	EventAccessBlock_t eventAccess = ^(BOOL granted, NSError *err) {
-		if (!granted) {
-			[task error:@"User denied calendar access" type:@"EXPECTED_FAILURE" subtype:nil];
-			return;
-		}
-		
-        if ([self doDelete:task eventStore:eventStore eventID:eventId]) {
-            if ([self doCommit:task eventStore:eventStore]) {
-                [task success:nil];
-            }
-        }
+		dispatch_async(dispatch_get_main_queue(), ^{
+			if (!granted) {
+				[task error:@"User denied calendar access" type:@"EXPECTED_FAILURE" subtype:nil];
+				return;
+			}
+			
+	        if ([self doDelete:task eventStore:eventStore eventID:eventId]) {
+	            if ([self doCommit:task eventStore:eventStore]) {
+	                [task success:nil];
+	            }
+	        }
 
-        // If something went wrong, the error is already reported.
+	        // If something went wrong, the error is already reported.
+	    });
 	};
 	
 	if ([eventStore respondsToSelector:@selector(requestAccessToEntityType:completion:)]) {
