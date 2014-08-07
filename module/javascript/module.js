@@ -32,18 +32,6 @@ forge['calendar'] = {
 		}
 		forge.internal.call('calendar.insertEvent', {details: details}, success, error);
 	},
-	'insertManyEvents': function (eventDetails, success, error) {
-        eventDetails.forEach(function (details) {
-            if (details.start) {
-                details.start = details.start.getTime()/1000;
-            }
-            if (details.end) {
-                details.end = details.end.getTime()/1000;
-            }
-        });
-        
-		forge.internal.call('calendar.insertManyEvents', {eventDetails: eventDetails}, success, error);
-	},
 	'updateEvent': function (eventId, details, success, error) {
 		if (details.start) {
 			details.start = details.start.getTime()/1000;
