@@ -102,65 +102,139 @@ typedef void (^EventAccessBlock_t)(BOOL granted, NSError *error);
 	}
 }
 
++ (EKCalendar *)calendarLookup:(ForgeTask *)task eventStore:(EKEventStore *)eventStore calendarID:(NSString *)calendarID {
+    EKCalendar *calendar = [eventStore calendarWithIdentifier:calendarID];
+    
+    if (!calendar) {
+        [task error:@"Calendar does not exist" type:@"EXPECTED_FAILURE" subtype:nil];
+        return nil;
+    }
+    
+    if (![calendar allowsContentModifications]) {
+        [task error:@"Calendar is read-only" type:@"EXPECTED_FAILURE" subtype:nil];
+        return nil;
+    }
+
+    return calendar;
+}
+
++ (EKEvent *)newEKEvent:(ForgeTask *)task eventStore:(EKEventStore *)eventStore details:(NSDictionary *)details {
+    EKEvent *event = [EKEvent eventWithEventStore:eventStore];
+    
+    event.calendar = [self calendarLookup:task eventStore:eventStore calendarID:[details objectForKey:@"calendar"]];
+
+    if (!event.calendar) {
+        return nil;
+    }
+    
+    event.title = [details objectForKey:@"title"];
+    event.location = [details objectForKey:@"location"];
+    event.notes = [details objectForKey:@"description"];
+
+    if ([details objectForKey:@"start"] != nil) {
+        event.startDate = [NSDate dateWithTimeIntervalSince1970:[((NSNumber*)[details objectForKey:@"start"]) doubleValue]];
+    }
+
+    if ([details objectForKey:@"end"] != nil) {
+        event.endDate = [NSDate dateWithTimeIntervalSince1970:[((NSNumber*)[details objectForKey:@"end"]) doubleValue]];
+    }
+
+    if ([details objectForKey:@"allday"] != nil) {
+        event.allDay = [((NSNumber*)[details objectForKey:@"allday"]) boolValue];
+    }
+
+    if ([details objectForKey:@"recurring"] != nil) {
+        NSString* recurring = [details objectForKey:@"recurring"];
+        if ([recurring isEqualToString:@"daily"]) {
+            [event addRecurrenceRule:[[EKRecurrenceRule alloc] initRecurrenceWithFrequency:EKRecurrenceFrequencyDaily interval:1 end:nil]];
+        } else if ([recurring isEqualToString:@"weekly"]) {
+            [event addRecurrenceRule:[[EKRecurrenceRule alloc] initRecurrenceWithFrequency:EKRecurrenceFrequencyWeekly interval:1 end:nil]];
+        } else if ([recurring isEqualToString:@"monthly"]) {
+            [event addRecurrenceRule:[[EKRecurrenceRule alloc] initRecurrenceWithFrequency:EKRecurrenceFrequencyMonthly interval:1 end:nil]];
+        } else if ([recurring isEqualToString:@"yearly"]) {
+            [event addRecurrenceRule:[[EKRecurrenceRule alloc] initRecurrenceWithFrequency:EKRecurrenceFrequencyYearly interval:1 end:nil]];
+        }
+    }
+
+    return event;
+}
+
++ (NSString *)doInsert:(ForgeTask *)task eventStore:(EKEventStore *)eventStore details:(NSDictionary *)details {
+    NSError *error = nil;
+    EKEvent *event = [self newEKEvent:task eventStore:eventStore details:details];
+    
+    if (!event) {
+        return nil;
+    }
+    
+    [eventStore saveEvent:event span:EKSpanFutureEvents error:&error];
+    
+    if (error) {
+        [ForgeLog e:error];
+        [task error:@"Failed to insert event" type:@"UNEXPECTED_FAILURE" subtype:nil];
+        return nil;
+    }
+    else {
+        return event.eventIdentifier;
+    }
+}
+
++ (BOOL)doDelete:(ForgeTask *)task eventStore:(EKEventStore *)eventStore eventID:(NSString *)eventID {
+    EKEvent *event = [eventStore eventWithIdentifier:eventID];
+    
+    if (!event) {
+        [task error:@"Event does not exist" type:@"EXPECTED_FAILURE" subtype:nil];
+        return NO;
+    }
+    
+    NSError *error = nil;
+    
+    [eventStore removeEvent:event span:EKSpanFutureEvents error:&error];
+    
+    if (error) {
+        [task error:@"Failed to remove event" type:@"UNEXPECTED_FAILURE" subtype:nil];
+        return NO;
+    }
+    else {
+        return YES;
+    }
+}
+
++ (BOOL)doCommit:(ForgeTask *)task eventStore:(EKEventStore *)eventStore {
+    NSError *error = nil;
+
+    [eventStore commit:&error];
+
+    if (error) {
+        [ForgeLog e:error];
+        [task error:@"Failed to commit events" type:@"UNEXPECTED_FAILURE" subtype:nil];
+        return NO;
+    }
+    else {
+        return YES;
+    }
+}
+
 + (void)insertEvent:(ForgeTask*)task details:(NSDictionary*)details {
 	EKEventStore *eventStore = [[EKEventStore alloc] init];
 	
 	EventAccessBlock_t eventAccess = ^(BOOL granted, NSError *err) {
-		if (!granted) {
-			[task error:@"User denied calendar access" type:@"EXPECTED_FAILURE" subtype:nil];
-			return;
-		}
-		
-		EKEvent *event = [EKEvent eventWithEventStore:eventStore];
-		
-		EKCalendar* calendar = [eventStore calendarWithIdentifier:[details objectForKey:@"calendar"]];
-		
-		if (!calendar) {
-			[task error:@"Calendar does not exist" type:@"EXPECTED_FAILURE" subtype:nil];
-			return;
-		}
-		
-		if (![calendar allowsContentModifications]) {
-			[task error:@"Calendar is read-only" type:@"EXPECTED_FAILURE" subtype:nil];
-			return;
-		}
-		
-		event.calendar = calendar;
-		
-		event.title = [details objectForKey:@"title"];
-		event.location = [details objectForKey:@"location"];
-		event.notes = [details objectForKey:@"description"];
-		if ([details objectForKey:@"start"] != nil) {
-			event.startDate = [NSDate dateWithTimeIntervalSince1970:[((NSNumber*)[details objectForKey:@"start"]) doubleValue]];
-		}
-		if ([details objectForKey:@"end"] != nil) {
-			event.endDate = [NSDate dateWithTimeIntervalSince1970:[((NSNumber*)[details objectForKey:@"end"]) doubleValue]];
-		}
-		if ([details objectForKey:@"allday"] != nil) {
-			event.allDay = [((NSNumber*)[details objectForKey:@"allday"]) boolValue];
-		}
-		if ([details objectForKey:@"recurring"] != nil) {
-			NSString* recurring = [details objectForKey:@"recurring"];
-			if ([recurring isEqualToString:@"daily"]) {
-				[event addRecurrenceRule:[[EKRecurrenceRule alloc] initRecurrenceWithFrequency:EKRecurrenceFrequencyDaily interval:1 end:nil]];
-			} else if ([recurring isEqualToString:@"weekly"]) {
-				[event addRecurrenceRule:[[EKRecurrenceRule alloc] initRecurrenceWithFrequency:EKRecurrenceFrequencyWeekly interval:1 end:nil]];
-			} else if ([recurring isEqualToString:@"monthly"]) {
-				[event addRecurrenceRule:[[EKRecurrenceRule alloc] initRecurrenceWithFrequency:EKRecurrenceFrequencyMonthly interval:1 end:nil]];
-			} else if ([recurring isEqualToString:@"yearly"]) {
-				[event addRecurrenceRule:[[EKRecurrenceRule alloc] initRecurrenceWithFrequency:EKRecurrenceFrequencyYearly interval:1 end:nil]];
+		dispatch_async(dispatch_get_main_queue(), ^{
+			if (!granted) {
+				[task error:@"User denied calendar access" type:@"EXPECTED_FAILURE" subtype:nil];
+				return;
 			}
-		}
-		
-		NSError *error = nil;
-		[eventStore saveEvent:event span:EKSpanFutureEvents error:&error];
-		if (error) {
-			[ForgeLog e:error];
-			[task error:@"Failed to insert event" type:@"UNEXPECTED_FAILURE" subtype:nil];
-		} else {
-			[task success:event.eventIdentifier];
-		}
-	};
+
+	        NSString *eventID = [self doInsert:task eventStore:eventStore details:details];
+	        
+	        if (eventID) {
+	            if ([self doCommit:task eventStore:eventStore]) {
+	                [task success:eventID];
+	            }
+	        }
+	        // If no eventID, the error has already been logged.
+		});
+    };
 	
 	if ([eventStore respondsToSelector:@selector(requestAccessToEntityType:completion:)]) {
 		[eventStore requestAccessToEntityType:EKEntityTypeEvent completion:eventAccess];
@@ -313,20 +387,13 @@ typedef void (^EventAccessBlock_t)(BOOL granted, NSError *error);
 			return;
 		}
 		
-		EKEvent *event = [eventStore eventWithIdentifier:eventId];
-		
-		if (!event) {
-			[task error:@"Event does not exist" type:@"EXPECTED_FAILURE" subtype:nil];
-			return;
-		}
-		
-		NSError *error = nil;
-		[eventStore removeEvent:event span:EKSpanFutureEvents error:&error];
-		if (error) {
-			[task error:@"Failed to remove event" type:@"UNEXPECTED_FAILURE" subtype:nil];
-		} else {
-			[task success:nil];
-		}
+        if ([self doDelete:task eventStore:eventStore eventID:eventId]) {
+            if ([self doCommit:task eventStore:eventStore]) {
+                [task success:nil];
+            }
+        }
+
+        // If something went wrong, the error is already reported.
 	};
 	
 	if ([eventStore respondsToSelector:@selector(requestAccessToEntityType:completion:)]) {
