@@ -6,6 +6,7 @@ import java.util.Date;
 import java.util.GregorianCalendar;
 import java.util.Hashtable;
 import java.util.Map;
+import java.util.TimeZone;
 
 import io.trigger.forge.android.core.ForgeApp;
 import io.trigger.forge.android.core.ForgeLog;
@@ -127,6 +128,11 @@ public class API {
 				values.put(Events.DTEND, (long)(details.get("end").getAsDouble()*1000));
 			}
 		}
+
+		if (Build.VERSION.SDK_INT >= 14) {
+			// ICS requires eventTimezone. see: http://developer.android.com/reference/android/provider/CalendarContract.Events.html
+			values.put("eventTimezone", TimeZone.getDefault().getID());
+	    }
 		
 		Uri eventUri;
     	if (Build.VERSION.SDK_INT >= 8) {
