@@ -1,8 +1,8 @@
 {
-    "changes": "* Support arm64 devices running iOS 8", 
-    "description": "Create calendar events on the users device.\n\nThe calendar module allows you to prompt the user to add an event to their devices calendar, with information about the event pre-filled with your data.", 
-    "min_platform_version": "v2.1.0", 
-    "namespace": "calendar", 
-    "platform_version": "v2.2.0", 
-    "version": "2.5"
+	"changes": "* Include TimeZone when creating events for Android 4",
+	"description": "Create calendar events on the users device.\n\nThe calendar module allows you to prompt the user to add an event to their devices calendar, with information about the event pre-filled with your data.",
+	"min_platform_version": "v2.1.0",
+	"namespace": "calendar",
+	"platform_version": "v2.1.0",
+	"version": "2.6.0"
 }
