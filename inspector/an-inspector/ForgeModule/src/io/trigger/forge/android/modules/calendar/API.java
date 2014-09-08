@@ -27,7 +27,7 @@ import com.google.gson.JsonObject;
 import com.google.gson.JsonPrimitive;
 
 public class API {
-	public static void listCalendars(final ForgeTask task) {
+	public static void listCalendars(final ForgeTask task, @ForgeParam("accessLevel") final int accessLevel) {
 		Uri eventUri;
 		String[] projection;
 		if (Build.VERSION.SDK_INT >= 14) {
@@ -44,18 +44,21 @@ public class API {
     	if (cursor.moveToFirst()) {
     		JsonArray result = new JsonArray();
     		do {
-    			if (cursor.getInt(3) > 400) {
+    			if (cursor.getInt(3) > accessLevel) {
     				JsonObject calendar = new JsonObject();
     				calendar.addProperty("id", cursor.getInt(0));
     				calendar.addProperty("title", cursor.getString(1));
     				calendar.addProperty("color", String.format("#%06X", (0xFFFFFF & cursor.getInt(2))));
     				result.add(calendar);
+    			} else {
+    				ForgeLog.d("Ignoring calendar: '" + cursor.getString(1) + "' with access level: " + cursor.getInt(3));
     			}
     		} while (cursor.moveToNext());
     		task.success(result);
     	} else {
     		task.error("Unable to read calendar info", "UNEXPECTED_FAILURE", null);
     	}
+		cursor.close();    	
 	}
 	
 	public static void insertEvent(final ForgeTask task, @ForgeParam("details") final JsonObject details) {
@@ -231,8 +234,8 @@ public class API {
 			task.success(result);
 		} else {
 			task.error("Event does not exist", "EXPECTED_FAILURE", null);
-			return;
 		}
+		cursor.close();
 	}
 	
 	public static void getEvents(final ForgeTask task, @ForgeParam("from") final double from, @ForgeParam("to") final double to) {
@@ -268,6 +271,7 @@ public class API {
 			events.add(result);
 		}
 		task.success(events);
+		cursor.close();		
 	}
 
 	public static void addEvent(final ForgeTask task, @ForgeParam("details") final JsonObject details) {
@@ -382,9 +386,10 @@ public class API {
 		    	if (cursor.moveToFirst()) {
 		    		max_val = cursor.getLong(cursor.getColumnIndex("max_id"));
 		    		task.success(new JsonPrimitive(max_val));
-		    		return;
+		    	} else {
+		    		task.error("Event created but ID could not be found", "UNEXPECTED_FAILURE", null);
 		    	}
-		    	task.error("Event created but ID could not be found", "UNEXPECTED_FAILURE", null);
+				cursor.close();
 			}
 		});
 	}

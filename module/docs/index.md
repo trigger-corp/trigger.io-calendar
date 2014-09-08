@@ -41,11 +41,34 @@ The properties that can be set on the options object are:
         alert("Event added!");
     });
 
-!method: forge.calendar.listCalendars(success, error)
+
+!method: forge.calendar.listCalendars(accessLevel, success, error)
 !platforms: iOS, Android
+!param: accessLevel `int` only return calendars where the user has access higher than the given access level. (Android only)
 !param: success `function(calendars)` called with an array of calendar objects, each containing `id`, `name`, and `color` properties
 !param: error `function(content)` called with details of any error which may occur
 !description: Get a list of the users calendars, primarily to be used in conjuction with forge.calendar.insertEvent, which requires a calendar id.
+
+The options for the `accessLevel` parameter are:
+
+* ``forge.calendar.ACL.none``: cannot access the calendar
+* ``forge.calendar.ACL.freebusy``: can only see free/busy information about the calendar
+* ``forge.calendar.ACL.read``: can read all event details
+* ``forge.calendar.ACL.respond``: can reply yes/no/maybe to an event
+* ``forge.calendar.ACL.override``: default
+* ``forge.calendar.ACL.contributor``: full access to modify the calendar, but not the access control settings
+* ``forge.calendar.ACL.editor``: full access to modify the calendar, but not the access control settings
+* ``forge.calendar.ACL.owner``: full access to the calendar
+* ``forge.calendar.ACL.root``: domain admin
+
+**Example:**
+
+    forge.calendar.listCalendars(forge.calendar.ACL.none, function (calendars) {
+        calendars.forEach(function (calendar) { 
+            ... 
+        });
+    });
+
 
 !method: forge.calendar.insertEvent(details, success, error)
 !platforms: iOS, Android

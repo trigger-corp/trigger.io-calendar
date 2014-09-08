@@ -27,6 +27,33 @@ if (forge.is.mobile()) {
 			start();
 		});
 	});
+
+
+	asyncTest("List calendars with access_level", 1, function() {
+		forge.calendar.listCalendars(forge.calendar.ACL.none, function (calendars) {
+			var calout = '';
+			for (var i = 0; i < calendars.length; i++) {
+				if (i === 0) {
+					calendar = calendars[i].id;
+				}
+				calout += '<span style="background-color: '+calendars[i].color+'"> &nbsp; </span>&nbsp;'+calendars[i].title+"<br>";
+			}
+			askQuestion("Are these also your calendars?<br>"+calout, {
+				Yes: function () {
+					ok(true, "User claims success");
+					start();
+				},
+				No: function () {
+					ok(false, "User claims failure");
+					start();
+				}
+			});
+		}, function (e) {
+			ok(false, "API call failure: "+e.message);
+			start();
+		});
+	});
+
 	asyncTest("Add calendar event", 1, function() {
 		askQuestion("Do you want to try to add a calendar event? If yes it should be an event beginning exactly 3 days ago and ending exactly 1 day ago, recurring weekly, with a title, description and location", {
 			Yes: function () {
@@ -100,6 +127,8 @@ if (forge.is.mobile()) {
 			}
 		});
 	});
+
+
 	asyncTest("Insert calendar event", 3, function() {
 		var startDate = new Date(Math.round((new Date().getTime()-1000*86400*3)/1000)*1000);
 		forge.calendar.insertEvent({
