@@ -22,12 +22,17 @@ import android.os.Build;
 import android.provider.CalendarContract;
 import android.provider.CalendarContract.Calendars;
 import android.provider.CalendarContract.Events;
+
 import com.google.gson.JsonArray;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonPrimitive;
 
 public class API {
 	public static void listCalendars(final ForgeTask task, @ForgeParam("accessLevel") final int accessLevel) {
+		if (!EventListener.checkPermissions()) {
+			task.error("Permission denied", "UNEXPECTED_FAILURE", null);
+			return;
+		}
 		Uri eventUri;
 		String[] projection;
 		if (Build.VERSION.SDK_INT >= 14) {
@@ -62,6 +67,10 @@ public class API {
 	}
 	
 	public static void insertEvent(final ForgeTask task, @ForgeParam("details") final JsonObject details) {
+		if (!EventListener.checkPermissions()) {
+			task.error("Permission denied", "UNEXPECTED_FAILURE", null);
+			return;
+		}
 		// Need calendar id, start date, end date
 		if (!details.has("calendar") || !details.has("start") || !details.has("end")) {
 			task.error("Missing one or more required details: calendar, start and end", "BAD_INPUT", null);
@@ -150,6 +159,10 @@ public class API {
 	}
 	
 	public static void updateEvent(final ForgeTask task, @ForgeParam("eventId") final int eventId, @ForgeParam("details") final JsonObject details) {
+		if (!EventListener.checkPermissions()) {
+			task.error("Permission denied", "UNEXPECTED_FAILURE", null);
+			return;
+		}
 		ContentResolver cr = ForgeApp.getActivity().getContentResolver();
 		ContentValues values = new ContentValues();
 		
@@ -203,6 +216,10 @@ public class API {
 	}
 	
 	public static void getEvent(final ForgeTask task, @ForgeParam("eventId") final int eventId) {
+		if (!EventListener.checkPermissions()) {
+			task.error("Permission denied", "UNEXPECTED_FAILURE", null);
+			return;
+		}
 		Uri eventUri;
 		String selection;
 		String[] projection = new String[] { Events.TITLE, Events.DESCRIPTION, Events.EVENT_LOCATION, Events.DTSTART, Events.DTEND, Events.ALL_DAY, Events.RRULE, Events._ID, Events.CALENDAR_ID, Events.DURATION };
@@ -239,6 +256,10 @@ public class API {
 	}
 	
 	public static void getEvents(final ForgeTask task, @ForgeParam("from") final double from, @ForgeParam("to") final double to) {
+		if (!EventListener.checkPermissions()) {
+			task.error("Permission denied", "UNEXPECTED_FAILURE", null);
+			return;
+		}
 		Uri.Builder builder = CalendarContract.Instances.CONTENT_URI.buildUpon();
 		ContentUris.appendId(builder, (long)(from * 1000));
 		ContentUris.appendId(builder, (long)(to * 1000));
@@ -275,6 +296,10 @@ public class API {
 	}
 
 	public static void addEvent(final ForgeTask task, @ForgeParam("details") final JsonObject details) {
+		if (!EventListener.checkPermissions()) {
+			task.error("Permission denied", "UNEXPECTED_FAILURE", null);
+			return;
+		}
 		/*task.performUI(new Runnable() {
 			@Override
 			public void run() {
@@ -395,6 +420,10 @@ public class API {
 	}
 	
 	public static void editEvent(final ForgeTask task, @ForgeParam("eventId") final int eventId) {
+		if (!EventListener.checkPermissions()) {
+			task.error("Permission denied", "UNEXPECTED_FAILURE", null);
+			return;
+		}
 		Uri uri;
     	if (Build.VERSION.SDK_INT >= 8) {
     		uri = ContentUris.withAppendedId(Uri.parse("content://com.android.calendar/events"), eventId);
@@ -412,6 +441,10 @@ public class API {
 	}
 	
 	public static void deleteEvent(final ForgeTask task, @ForgeParam("eventId") final int eventId) {
+		if (!EventListener.checkPermissions()) {
+			task.error("Permission denied", "UNEXPECTED_FAILURE", null);
+			return;
+		}
 		Uri uri;
     	if (Build.VERSION.SDK_INT >= 8) {
     		uri = ContentUris.withAppendedId(Uri.parse("content://com.android.calendar/events"), eventId);
