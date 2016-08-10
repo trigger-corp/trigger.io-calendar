@@ -1,4 +1,8 @@
 [
-        { "do": { "add_ios_system_framework": "EventKit.framework" } },
-        { "do": { "add_ios_system_framework": "EventKitUI.framework" } }
+	{ "do": { "add_ios_system_framework": "EventKit.framework" } },
+	{ "do": { "add_ios_system_framework": "EventKitUI.framework" } },
+	{ "do": { "set_in_info_plist": {
+		"key": "NSCalendarsUsageDescription",
+		"value": "{{modules.calendar.config.usage_description}}"
+	} } }
 ]

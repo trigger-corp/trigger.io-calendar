@@ -4,6 +4,11 @@
 The ``forge.calendar`` namespace allows calendar events to be added to
 the native calendar
 
+## Config options
+
+usage_description
+:   This key lets you describe the reason your app accesses the user's calendars. When the system prompts the user to allow access, this string is displayed as part of the alert.
+
 ##API
 
 !method: forge.calendar.addEvent(options, success, error)
@@ -31,15 +36,15 @@ The properties that can be set on the options object are:
 
 **Example:**
 
-    forge.calendar.addEvent({
-        title: "Anniversary of adding my first event",
-        start: new Date(),
-        end: new Date(),
-        allday: true,
-        recurring: "yearly"
-    }, function () {
-        alert("Event added!");
-    });
+	forge.calendar.addEvent({
+		title: "Anniversary of adding my first event",
+		start: new Date(),
+		end: new Date(),
+		allday: true,
+		recurring: "yearly"
+	}, function () {
+		alert("Event added!");
+	});
 
 
 !method: forge.calendar.listCalendars(accessLevel, success, error)
@@ -63,11 +68,11 @@ The options for the `accessLevel` parameter are:
 
 **Example:**
 
-    forge.calendar.listCalendars(forge.calendar.ACL.none, function (calendars) {
-        calendars.forEach(function (calendar) { 
-            ... 
-        });
-    });
+	forge.calendar.listCalendars(forge.calendar.ACL.none, function (calendars) {
+		calendars.forEach(function (calendar) {
+			...
+		});
+	});
 
 
 !method: forge.calendar.insertEvent(details, success, error)

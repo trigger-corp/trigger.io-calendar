@@ -1,6 +1,8 @@
 {
 	"this_module": {
-		"config": {}
+		"config": {
+			"usage_description": "This app would like to remember your birthday."
+		}
 	},
 	"modules": {}
 }
