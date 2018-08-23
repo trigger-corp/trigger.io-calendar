@@ -9,6 +9,8 @@
 /* Begin PBXBuildFile section */
 		71B7936D16B2C83A002D8A8E /* calendar_API.m in Sources */ = {isa = PBXBuildFile; fileRef = 71B7936A16B2C83A002D8A8E /* calendar_API.m */; };
 		71B7936E16B2C83A002D8A8E /* calendar_Delegate.m in Sources */ = {isa = PBXBuildFile; fileRef = 71B7936C16B2C83A002D8A8E /* calendar_Delegate.m */; };
+		71BDD9CA212E97F40075EEA3 /* JLRemindersPermission.m in Sources */ = {isa = PBXBuildFile; fileRef = 71BDD9C7212E97F40075EEA3 /* JLRemindersPermission.m */; };
+		71BDD9CB212E97F40075EEA3 /* JLCalendarPermission.m in Sources */ = {isa = PBXBuildFile; fileRef = 71BDD9C8212E97F40075EEA3 /* JLCalendarPermission.m */; };
 		B31B6D5215C13D5200854074 /* Foundation.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = B31B6D5115C13D5200854074 /* Foundation.framework */; };
 		B31B6D6F15C1467100854074 /* CoreFoundation.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = B31B6D6E15C1467100854074 /* CoreFoundation.framework */; };
 		B366262A182D06B100BB5EC0 /* calendar_Util.m in Sources */ = {isa = PBXBuildFile; fileRef = B3662629182D06B100BB5EC0 /* calendar_Util.m */; };
@@ -24,6 +26,10 @@
 		71B7936A16B2C83A002D8A8E /* calendar_API.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = calendar_API.m; sourceTree = "<group>"; };
 		71B7936B16B2C83A002D8A8E /* calendar_Delegate.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = calendar_Delegate.h; sourceTree = "<group>"; };
 		71B7936C16B2C83A002D8A8E /* calendar_Delegate.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = calendar_Delegate.m; sourceTree = "<group>"; };
+		71BDD9C6212E97F40075EEA3 /* JLCalendarPermission.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = JLCalendarPermission.h; sourceTree = "<group>"; };
+		71BDD9C7212E97F40075EEA3 /* JLRemindersPermission.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = JLRemindersPermission.m; sourceTree = "<group>"; };
+		71BDD9C8212E97F40075EEA3 /* JLCalendarPermission.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = JLCalendarPermission.m; sourceTree = "<group>"; };
+		71BDD9C9212E97F40075EEA3 /* JLRemindersPermission.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = JLRemindersPermission.h; sourceTree = "<group>"; };
 		B31B6D4E15C13D5200854074 /* libForgeModule.a */ = {isa = PBXFileReference; explicitFileType = archive.ar; includeInIndex = 0; path = libForgeModule.a; sourceTree = BUILT_PRODUCTS_DIR; };
 		B31B6D5115C13D5200854074 /* Foundation.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Foundation.framework; path = System/Library/Frameworks/Foundation.framework; sourceTree = SDKROOT; };
 		B31B6D6D15C1467100854074 /* plugin.bundle */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = plugin.bundle; sourceTree = BUILT_PRODUCTS_DIR; };
@@ -75,9 +81,21 @@
 			name = calendar;
 			sourceTree = "<group>";
 		};
+		71BDD9C5212E97F40075EEA3 /* JLPermissions */ = {
+			isa = PBXGroup;
+			children = (
+				71BDD9C6212E97F40075EEA3 /* JLCalendarPermission.h */,
+				71BDD9C7212E97F40075EEA3 /* JLRemindersPermission.m */,
+				71BDD9C8212E97F40075EEA3 /* JLCalendarPermission.m */,
+				71BDD9C9212E97F40075EEA3 /* JLRemindersPermission.h */,
+			);
+			path = JLPermissions;
+			sourceTree = "<group>";
+		};
 		B31B6D4315C13D5200854074 = {
 			isa = PBXGroup;
 			children = (
+				71BDD9C5212E97F40075EEA3 /* JLPermissions */,
 				71B7936716B2C831002D8A8E /* calendar */,
 				B31B6D5015C13D5200854074 /* Frameworks */,
 				B31B6D4F15C13D5200854074 /* Products */,
@@ -185,8 +203,10 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				71BDD9CB212E97F40075EEA3 /* JLCalendarPermission.m in Sources */,
 				B366262A182D06B100BB5EC0 /* calendar_Util.m in Sources */,
 				71B7936D16B2C83A002D8A8E /* calendar_API.m in Sources */,
+				71BDD9CA212E97F40075EEA3 /* JLRemindersPermission.m in Sources */,
 				71B7936E16B2C83A002D8A8E /* calendar_Delegate.m in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;

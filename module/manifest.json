@@ -1,8 +1,8 @@
 {
-	"changes": "* New mandatory configuration field `usage_description` to describe the reason your app acceses the user's calendars on iOS 10 devices.",
-	"description": "Create calendar events on the users device.\n\nThe calendar module allows you to prompt the user to add an event to their devices calendar, with information about the event pre-filled with your data.",
-	"min_platform_version": "v2.4.5",
-	"namespace": "calendar",
-	"platform_version": "v2.4.5",
-	"version": "2.8"
+    "changes": "* Fixed: iOS app store rejections caused by unused permission API's",
+    "description": "Create calendar events on the users device.\n\nThe calendar module allows you to prompt the user to add an event to their devices calendar, with information about the event pre-filled with your data.",
+    "min_platform_version": "v2.6.9",
+    "namespace": "calendar",
+    "platform_version": "v2.6.9",
+    "version": "2.9"
 }

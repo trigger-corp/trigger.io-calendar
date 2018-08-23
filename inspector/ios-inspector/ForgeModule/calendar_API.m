@@ -6,11 +6,16 @@
 //  Copyright (c) 2013 Trigger Corp. All rights reserved.
 //
 
+#import <EventKit/EventKit.h>
+#import <EventKitUI/EventKitUI.h>
+
+#import "JLCalendarPermission.h"
+#import "JLRemindersPermission.h"
+
 #import "calendar_API.h"
 #import "calendar_Delegate.h"
 #import "calendar_Util.h"
-#import <EventKit/EventKit.h>
-#import <EventKitUI/EventKitUI.h>
+
 
 typedef void (^EventAccessBlock_t)(BOOL granted, NSError *error);
 
@@ -422,5 +427,64 @@ typedef void (^EventAccessBlock_t)(BOOL granted, NSError *error);
 		eventAccess(YES, nil);
 	}
 }
+
+
++ (void)permissions_check:(ForgeTask*)task permission:(NSString *)permission {
+    JLPermissionsCore* jlpermission = [self resolvePermission:permission];
+    if (jlpermission == NULL) {
+        [task success:[NSNumber numberWithBool:NO]];
+        return;
+    }
+
+    JLAuthorizationStatus status = [jlpermission authorizationStatus];
+    [task success:[NSNumber numberWithBool:status == JLPermissionAuthorized]];
+}
+
+
++ (void)permissions_request:(ForgeTask*)task permission:(NSString *)permission {
+    JLPermissionsCore* jlpermission = [self resolvePermission:permission];
+    if (jlpermission == NULL) {
+        [task success:[NSNumber numberWithBool:NO]];
+        return;
+    }
+
+    if ([jlpermission authorizationStatus] == JLPermissionAuthorized) {
+        [task success:[NSNumber numberWithBool:YES]];
+        return;
+    }
+
+    NSDictionary* params = task.params;
+    NSString* rationale = [params objectForKey:@"rationale"];
+    if (rationale != nil) {
+        [jlpermission setRationale:rationale];
+    }
+
+    [jlpermission authorize:^(BOOL granted, NSError * _Nullable error) {
+        [jlpermission setRationale:nil]; // reset rationale
+        if (error) {
+            [ForgeLog d:[NSString stringWithFormat:@"permissions.check '%@' failed with error: %@", permission, error]];
+        }
+        [task success:[NSNumber numberWithBool:granted]];
+    }];
+}
+
+
++ (JLPermissionsCore*)resolvePermission:(NSString*)permission {
+    JLPermissionsCore* ret = NULL;
+    if ([permission isEqualToString:@""]) {
+        [ForgeLog d:[NSString stringWithFormat:@"Permission not supported on iOS:%@", permission]];
+
+    } else if ([permission isEqualToString:@"ios.permission.calendar"]) {
+        ret = [JLCalendarPermission sharedInstance];
+    } else if ([permission isEqualToString:@"ios.permission.reminders"]) {
+        ret = [JLRemindersPermission sharedInstance];
+
+    } else {
+        [ForgeLog w:[NSString stringWithFormat:@"Requested unknown permission:%@", permission]];
+    }
+
+    return ret;
+}
+
 
 @end
